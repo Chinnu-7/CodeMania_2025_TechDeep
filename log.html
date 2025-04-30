@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login & Signup</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #fefeff, #2575fc);
+        }
+
+        .container {
+            width: 400px;
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+        }
+
+        .toggle-wrap {
+            display: flex;
+            justify-content: space-between;
+            background: #2575fc;
+            color: #fff;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        .toggle-wrap div {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            transition: background 0.3s ease;
+        }
+
+        .toggle-wrap .active {
+            background: #6a11cb;
+            border-radius: 5px;
+        }
+
+        .form-wrap {
+            padding: 20px;
+            display: none;
+        }
+
+        .form-wrap.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-wrap form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-wrap input {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .form-wrap button {
+            padding: 10px;
+            background: #2575fc;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .form-wrap button:hover {
+            background: #6a11cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="toggle-wrap">
+            <div id="loginToggle" class="active">Login</div>
+            <div id="signupToggle">Signup</div>
+        </div>
+        <div id="loginForm" class="form-wrap active">
+            <form onsubmit="redirectToHome(event)">
+                <b><p style="padding-bottom: 5%;">Welcome back to, Evasafe!</p></b><br>
+                <input type="text" placeholder="Username" required>
+                <input type="password" placeholder="Password" required>
+                <button type="submit">Login</button>
+            </form>
+        </div>
+        <div id="signupForm" class="form-wrap">
+            <form onsubmit="redirectToHome(event)">
+                <b><p style="padding-bottom: 5%;">welcome to Evasafe!</p></b><br>
+                <input type="text" placeholder="Username" required>
+                <input type="email" placeholder="Email" required>
+                <input type="text" placeholder="Phone Number" required>
+                <input type="password" placeholder="Password" required>
+                <input type="password" placeholder="Confirm Password" required>
+                <button type="submit">Signup</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const loginToggle = document.getElementById('loginToggle');
+        const signupToggle = document.getElementById('signupToggle');
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+
+        loginToggle.addEventListener('click', () => {
+            loginToggle.classList.add('active');
+            signupToggle.classList.remove('active');
+            loginForm.classList.add('active');
+            signupForm.classList.remove('active');
+        });
+
+        signupToggle.addEventListener('click', () => {
+            signupToggle.classList.add('active');
+            loginToggle.classList.remove('active');
+            signupForm.classList.add('active');
+            loginForm.classList.remove('active');
+        });
+
+        function redirectToHome(event) {
+            event.preventDefault();
+            window.location.href = 'home.html';
+        }
+    </script>
+</body>
+</html>

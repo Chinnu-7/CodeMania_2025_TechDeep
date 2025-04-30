@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SafeHub - Emergency Interface</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to right, #141e30, #243b55);
+      color: #fff;
+    }
+
+    header {
+      background-color: #1c1c1c;
+      padding: 20px;
+      text-align: center;
+      font-size: 2rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      position: relative;
+    }
+
+    .menu {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+    }
+
+    .menu-btn {
+      background-color: #444;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .dropdown {
+      display: none;
+      position: absolute;
+      right: 0;
+      background-color: #2c3e50;
+      border-radius: 5px;
+      margin-top: 10px;
+      min-width: 160px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      z-index: 1;
+    }
+
+    .dropdown a {
+      display: block;
+      padding: 10px;
+      color: white;
+      text-decoration: none;
+    }
+
+    .dropdown a:hover {
+      background-color: #34495e;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .card {
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      transition: transform 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    button {
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 30px;
+      cursor: pointer;
+      font-size: 1rem;
+      margin-top: 10px;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #c0392b;
+    }
+
+    input, select {
+      padding: 10px;
+      border-radius: 5px;
+      border: none;
+      margin-top: 10px;
+      width: 100%;
+    }
+
+    iframe {
+      width: 100%;
+      height: 200px;
+      border-radius: 10px;
+      border: none;
+      margin-top: 10px;
+    }
+
+    .timer-display {
+      margin-top: 10px;
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    SafeHub Emergency Panel
+    <div class="menu">
+      <button class="menu-btn" onclick="toggleMenu()">☰ Menu</button>
+      <div class="dropdown" id="dropdownMenu">
+        <a href="#">Profile</a>
+        <a href="#">Login</a>
+        <a href="#">Sign Up</a>
+        <a href="#">Logout</a>
+        <a href="#" onclick="showAddContact()">Add Emergency Contact</a>
+        <a href="#" onclick="exportContacts()">Export Contacts</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- SOS Button -->
+    <div class="card">
+      <h3>Emergency SOS</h3>
+      <button onclick="triggerSOS()">Send SOS Alert</button>
+      <p id="sos-msg"></p>
+    </div>
+
+    <!-- Real-time Tracking -->
+    <div class="card">
+      <h3>Real-Time Location</h3>
+      <iframe src="https://maps.google.com/maps?q=police%20station&t=&z=13&ie=UTF8&iwloc=&output=embed"></iframe>
+    </div>
+    <div class="card">
+      <h3>Safety Zones</h3>
+      <a href="try.html"><iframe src="try.html"></iframe></a>
+    </div>
+    <!-- Emergency Contact Selection -->
+    <div class="card">
+      <h3>Emergency Contacts</h3>
+      <select id="contacts">
+        <option value="">-- Select Contact --</option>
+      </select>
+      <button onclick="contactPerson()">Contact Now</button>
+      <p id="contact-msg"></p>
+    </div>
+
+    <!-- Police Call -->
+    <div class="card">
+      <h3>Call Nearby Police</h3>
+      <button onclick="callPolice()">Call Police</button>
+    </div>
+
+    <!-- Alarm Trigger -->
+    <div class="card">
+      <h3>Trigger Alarm</h3>
+      <button onclick="toggleAlarm()" id="alarmBtn">Activate Alarm</button>
+      <p id="alarm-status"></p>
+    </div>
+
+    <!-- Time Settings -->
+    <div class="card">
+      <h3>Set Timer (Real World Time)</h3>
+      <input type="time" id="timer-time-input" placeholder="Enter time (HH:MM)">
+      <button onclick="setRealWorldTimer()">Set Timer</button>
+      <div class="timer-display" id="timer-time-display">No timer set</div>
+    </div>
+
+    <script>
+      let realWorldTimerId;
+
+      function setRealWorldTimer() {
+      const input = document.getElementById('timer-time-input').value;
+      const display = document.getElementById('timer-time-display');
+
+      if (!input) {
+        alert('Invalid time! Please enter a valid time.');
+        return;
+      }
+
+      const [hours, minutes] = input.split(':').map(Number);
+      const now = new Date();
+      const targetTime = new Date();
+
+      targetTime.setHours(hours, minutes, 0, 0);
+
+      if (targetTime <= now) {
+        targetTime.setDate(targetTime.getDate() + 1); // Set for the next day if time has already passed
+      }
+
+      const timeDifference = targetTime - now;
+
+      if (realWorldTimerId) {
+        clearTimeout(realWorldTimerId);
+      }
+
+      alert('Timer set successfully!');
+      display.innerText = `Timer set for ${input}.`;
+
+      realWorldTimerId = setTimeout(() => {
+        alert('Time is up! 🚨');
+        display.innerText = 'No timer set';
+      }, timeDifference);
+      }
+    </script>
+  </div>
+
+  <!-- Audio for SOS Button -->
+  <audio id="sos-sound" src="audio.mp3" preload="auto"></audio>
+
+  <script>
+    function toggleMenu() {
+      const menu = document.getElementById('dropdownMenu');
+      menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+    }
+
+    function triggerSOS() {
+      document.getElementById('sos-msg').innerText = 'SOS Alert Sent! Authorities Notified.';
+      const audio = document.getElementById('sos-sound');
+      audio.currentTime = 0;
+      audio.play();
+
+      navigator.geolocation.getCurrentPosition(position => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        alert(`Your location: Latitude ${lat}, Longitude ${lon}`);
+      }, () => {
+        alert('Unable to retrieve your location.');
+      });
+    }
+
+    function contactPerson() {
+      const contact = document.getElementById('contacts').value;
+      if (contact) {
+        document.getElementById('contact-msg').innerText = `Calling ${contact}...`;
+      } else {
+        document.getElementById('contact-msg').innerText = 'Please select a contact.';
+      }
+    }
+
+    function callPolice() {
+      alert('Dialing local police station...');
+    }
+
+    let alarmActive = false;
+    function toggleAlarm() {
+      const alarmStatus = document.getElementById('alarm-status');
+      alarmActive = !alarmActive;
+      alarmStatus.innerText = alarmActive ? 'Alarm Activated! 🔊' : 'Alarm Deactivated.';
+      document.getElementById('alarmBtn').innerText = alarmActive ? 'Deactivate Alarm' : 'Activate Alarm';
+    }
+
+    function startTimer() {
+      const input = document.getElementById('timer-input').value;
+      const display = document.getElementById('timer-display');
+      let seconds = parseInt(input);
+
+      if (isNaN(seconds) || seconds <= 0) {
+        display.innerText = 'Invalid time!';
+        return;
+      }
+
+      const interval = setInterval(() => {
+        let mins = String(Math.floor(seconds / 60)).padStart(2, '0');
+        let secs = String(seconds % 60).padStart(2, '0');
+        display.innerText = `${mins}:${secs}`;
+        seconds--;
+
+        if (seconds < 0) {
+          clearInterval(interval);
+          display.innerText = 'Time up! 🚨';
+        }
+      }, 1000);
+    }
+
+    function showAddContact() {
+      const name = prompt("Enter contact name:");
+      const number = prompt("Enter contact number:");
+      if (name && number) {
+        const contacts = JSON.parse(localStorage.getItem('emergencyContacts')) || [];
+        contacts.push({ name, number });
+        localStorage.setItem('emergencyContacts', JSON.stringify(contacts));
+        loadContacts();
+      }
+    }
+
+    function exportContacts() {
+      const contacts = JSON.parse(localStorage.getItem('emergencyContacts')) || [];
+      if (contacts.length === 0) {
+        alert('No contacts to export.');
+        return;
+      }
+
+      let csvContent = "data:text/csv;charset=utf-8,Name,Number\n";
+      contacts.forEach(contact => {
+        csvContent += `${contact.name},${contact.number}\n`;
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "emergency_contacts.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function loadContacts() {
+      const contactList = JSON.parse(localStorage.getItem('emergencyContacts')) || [];
+      const select = document.getElementById('contacts');
+      select.innerHTML = '<option value="">-- Select Contact --</option>';
+      contactList.forEach(c => {
+        const option = document.createElement('option');
+        option.value = c.number;
+        option.text = `${c.name} - ${c.number}`;
+        select.appendChild(option);
+      });
+    }
+
+    window.onload = loadContacts;
+  </script>
+</body>
+</html>

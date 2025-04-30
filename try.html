@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Live Safety Zone Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; }
+    #map { height: 90vh; width: 100vw; }
+    #info {
+      padding: 10px;
+      background: #f0f0f0;
+      font-weight: bold;
+      text-align: center;
+    }
+    .pulse {
+      animation: pulse 2s infinite;
+      border-radius: 50%;
+    }
+    @keyframes pulse {
+      0% { transform: scale(0.8); opacity: 0.7; }
+      50% { transform: scale(1.2); opacity: 0.3; }
+      100% { transform: scale(0.8); opacity: 0.7; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="info">📍 Detecting your location...</div>
+<div id="map"></div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+  // Predefined safety zones
+  const zones = [
+    { name: "Downtown", lat: 17.385, lon: 78.486, level: "Green", score: 4.5, incidents: 3 },
+    { name: "Market Area", lat: 17.396, lon: 78.497, level: "Yellow", score: 3.1, incidents: 6 },
+    { name: "Suburb", lat: 17.370, lon: 78.480, level: "Red", score: 1.9, incidents: 11 },
+  ];
+
+  const colors = {
+    Green: "green",
+    Yellow: "orange",
+    Red: "red"
+  };
+
+  const getDistance = (lat1, lon1, lat2, lon2) => {
+    const toRad = deg => deg * Math.PI / 180;
+    const R = 6371;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) ** 2;
+    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+  };
+
+  async function getIPLocation() {
+    try {
+      const res = await fetch("https://ipinfo.io/json?token=YOUR_TOKEN_HERE"); // Get a free token from ipinfo.io
+      const data = await res.json();
+      const [lat, lon] = data.loc.split(',').map(Number);
+      return { lat, lon };
+    } catch (err) {
+      console.error("IP location failed", err);
+      return { lat: 17.385, lon: 78.486 }; // fallback
+    }
+  }
+
+  async function initMap() {
+    const userLoc = await getIPLocation();
+    const map = L.map("map").setView([userLoc.lat, userLoc.lon], 14);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const userMarker = L.marker([userLoc.lat, userLoc.lon]).addTo(map)
+      .bindPopup("You are here").openPopup();
+
+    let userZone = null;
+
+    zones.forEach(zone => {
+      const color = colors[zone.level];
+      const radius = 1000;
+
+      const circle = L.circle([zone.lat, zone.lon], {
+        color,
+        fillColor: color,
+        fillOpacity: 0.4,
+        radius
+      }).addTo(map);
+
+      const marker = L.circleMarker([zone.lat, zone.lon], {
+        radius: 8,
+        color,
+        fillColor: color,
+        fillOpacity: 1,
+        className: "pulse"
+      }).addTo(map);
+
+      marker.bindPopup(`
+        <b>${zone.name}</b><br>
+        Level: ${zone.level}<br>
+        Score: ${zone.score}<br>
+        Incidents: ${zone.incidents}
+      `);
+
+      const distance = getDistance(userLoc.lat, userLoc.lon, zone.lat, zone.lon);
+      if (distance <= 1 && !userZone) {
+        userZone = zone;
+      }
+    });
+
+    const info = document.getElementById("info");
+    if (userZone) {
+      info.innerHTML = `
+        ✅ You are in <b>${userZone.name}</b><br>
+        Safety Level: <span style="color:${colors[userZone.level]}">${userZone.level}</span><br>
+        Score: ${userZone.score}, Incidents: ${userZone.incidents}
+      `;
+    } else {
+      info.innerHTML = `ℹ️ You are not in a monitored zone.`;
+    }
+  }
+
+  initMap();
+</script>
+
+</body>
+</html>
